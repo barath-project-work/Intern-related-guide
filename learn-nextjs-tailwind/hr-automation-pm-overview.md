@@ -24,7 +24,7 @@ The goal is to **reduce manual effort** by automating:
 | Person | What They Can Do |
 |--------|-----------------|
 | **HR / Admin** | Login to the platform, manage applications, schedule interviews, send/receive agreements, upload documents, generate letters, track intern progress |
-| **Candidate / Intern** | Receive all communication via email (no login required). Can view their own task tracker after joining |
+| **Candidate / Intern** | Receive all communication via email. Can **log in to write their daily tasks** in the task tracker and mark attendance. HR reviews what they've written |
 
 ---
 
@@ -68,11 +68,11 @@ After the candidate is appointed, this is a **critical step**:
 2. The agreement PDF has **blank spaces** for the candidate's name and signature
 3. The candidate **prints the agreement, signs it by hand**, and **scans/takes a photo** of it
 4. The candidate **emails the signed copy back** to HR
-5. HR **uploads the signed copy** to the platform
-6. The platform shows a **green "Agreement Received"** badge
+5. **The system automatically detects the reply email** with the signed attachment and uploads it to the platform — **HR does not need to manually upload anything**
+6. The platform shows a **green "Agreement Received"** badge automatically
 7. Only after this is done can HR proceed to the next step
 
-> 💡 **Why this matters:** This replaces the messy process of chasing agreements via email manually. HR can see at a glance whose agreement is pending.
+> 💡 **Why this matters:** The entire agreement process is hands-free for HR after sending the initial email. The system watches for the reply and handles the rest automatically.
 
 ---
 
@@ -102,11 +102,20 @@ All documents are **automatically stored in organized folders** in Google Drive.
 ---
 
 ### 7. 📊 Task Tracker (Per Candidate)
-Each intern gets their own task tracking system:
-- An Excel sheet is created inside a folder named `[Candidate Name] working/`
-- HR can assign tasks with dates and descriptions
-- The system tracks **number of working days**
-- This sheet is **only visible to the candidate** (they can view, not edit)
+Each intern gets their own task tracking system where they log their daily work:
+
+| Who | What They Can Do |
+|-----|-----------------|
+| **Intern** | **Writes & edits** — logs what they completed each day, marks attendance (present/absent) |
+| **HR** | **Reviews & views only** — cannot edit the intern's entries |
+| **System** | **Auto-calculates** working days based on attendance entries and syncs to Google Sheet |
+
+**How Working Days Are Calculated:**
+- The intern marks each day as **attended** or **absent**
+- System automatically calculates: `Working Days = Total Days − Absent Days`
+- Example: If the intern attended 5 out of 6 days in a week, working days = 5
+- The working days count is displayed on the **candidate's profile page** for HR to view
+- This data is also **synced to Google Sheet** automatically
 
 ---
 
@@ -138,7 +147,7 @@ HR can edit any information about any candidate at any time — application deta
            ↓
 5. (If Appointed) → Send Agreement to Candidate via Email
            ↓
-6. Candidate signs and sends back → HR marks as Received
+6. Candidate signs and sends back → System auto-detects & uploads → Marked as Received ✅
            ↓
 7. Upload Documents (signed agreement, marksheet, aadhar)
            ↓

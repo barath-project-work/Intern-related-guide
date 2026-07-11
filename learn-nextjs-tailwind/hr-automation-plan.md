@@ -63,7 +63,6 @@ An internal web platform for HR to manage the entire **internship lifecycle** �
 | Manually enter applications | Create |
 | Schedule interviews | Create |
 | Send agreement to candidate | Create |
-| Mark agreement as received | Update |
 | Upload candidate documents (marksheet, aadhar) | Create |
 | Generate & approve joining letters | Write / Approve |
 | Generate experience certificates & LORs | Create |
@@ -76,7 +75,8 @@ An internal web platform for HR to manage the entire **internship lifecycle** �
 
 | Permission | Scope |
 |------------|-------|
-| View own task tracker | Read-only |
+| **Write daily tasks in own task tracker** | **Write** |
+| View own task tracker | Read |
 | Receive automated emails | Auto |
 | Print & sign agreement (offline) | Manual |
 | Send signed agreement to HR via email | Manual |
@@ -188,11 +188,12 @@ An internal web platform for HR to manage the entire **internship lifecycle** �
    └────────┬───────────┘
             │
             ▼
-   ┌────────────────────┐
-   │ HR Uploads Signed  │
-   │ Agreement to       │
-   │ Platform           │
-   └────────┬───────────┘
+   ┌────────────────────────────┐
+   │ System Auto-Detects Email  │
+   │ Reply & Auto-Uploads      │
+   │ Signed Agreement to        │
+   │ Platform & Drive           │
+   └────────┬───────────────────┘
             │
    ┌────────┴───────────┐
    │                    │
@@ -223,8 +224,8 @@ An internal web platform for HR to manage the entire **internship lifecycle** �
 | 1 | Generate agreement | HR / System | System creates agreement PDF with placeholder fields (name, signature, date) |
 | 2 | Send via email | HR / Auto | Agreement PDF sent to candidate's email |
 | 3 | Print & sign | Candidate | Candidate prints the agreement, signs it manually |
-| 4 | Send back via email | Candidate | Candidate scans/photographs signed agreement and emails it back to HR |
-| 5 | Mark as received | HR | HR uploads the signed agreement to the platform (or system detects email) |
+| 4 | Send back via email | Candidate | Candidate scans/photographs signed agreement and emails it back to HR's inbox |
+| 5 | Auto-detect & upload | System | System automatically detects the incoming email reply with attachment, extracts the signed PDF, and uploads it to the platform + Google Drive (no manual HR action needed) |
 | 6 | Status updated | Auto | Agreement status changes to `received` → unlocks joining letter stage |
 
 **Agreement Template Elements (Placeholders):**
@@ -269,10 +270,11 @@ Date: [Empty]                    ← To be filled by candidate
 | `expired` | Follow-up needed (not received after X days) |
 
 **How It Reflects in the Platform:**
-- Once HR marks the agreement as received, the platform shows a **green "Agreement Received ✅"** badge on the candidate's profile
-- The signed PDF is stored in the candidate's folder in Drive
-- The system records the date received
+- Once the system detects and uploads the signed agreement, the platform shows a **green "Agreement Received ✅"** badge on the candidate's profile
+- The signed PDF is stored in the candidate's folder in Drive **automatically**
+- The system records the date received automatically
 - Only after agreement is marked `received` can HR proceed to Joining Letter generation
+- HR can also manually trigger the upload if the email detection fails (backup option)
 
 **Email to Candidate (Agreement Send):**
 
@@ -333,7 +335,7 @@ HR Team
 
 **Description:** Upload candidate documents with automatic folder creation.
 
-> **Note:** The **Signed Agreement Letter** upload here happens when HR manually uploads the signed PDF received from the candidate via email. See [F3.5 — Agreement Workflow](#-f35--agreement-workflow-send--sign--receive) for the full flow.
+> **Note:** The **Signed Agreement Letter** is uploaded **automatically** when the system detects the candidate's email reply with the signed PDF attachment. No manual HR upload needed. See [F3.5 — Agreement Workflow](#-f35--agreement-workflow-send--sign--receive) for the full flow.
 
 **Documents to Upload:**
 | Document | Type | Required | Source |
@@ -376,22 +378,46 @@ HR Drive/
 
 ### 📊 F6 — Task Tracker (Per Candidate)
 
-**Description:** Each candidate has their own task tracker Excel sheet.
+**Description:** Each candidate has their own task tracker where they log their daily work. HR can only view/review the data. The system automatically calculates working days based on attendance.
+
+**How It Works:**
+
+| Who | What They Can Do |
+|-----|-----------------|
+| **Candidate (Intern)** | **Writes & edits** daily entries — what they completed, attendance, remarks |
+| **HR** | **View only** — reviews the data, cannot edit |
+| **System** | **Auto-calculates** working days based on attendance entries and syncs to Google Sheet |
 
 **Details:**
 - Inside the `[Candidate Name] working/` folder
-- Excel sheet with task tracking columns
-- **Only visible to the candidate** (candidate view-only)
-- Tracks: number of working days, daily tasks, status
+- Candidate opens the task tracker and logs their daily work
+- HR can open the same tracker but **cannot modify** anything — read-only review
+- Data is also synced to Google Sheet automatically
 
-**Task Tracker Columns (suggested):**
-| Date | Task Description | Status | Remarks |
-|------|-----------------|--------|---------|
+**Task Tracker Columns:**
+| Date | Task Completed | Attended (Yes/No) | Remarks |
+|------|----------------|-------------------|---------|
 | — | — | — | — |
 
-**Working Days Calculation:**
-- System tracks the number of working days
-- Displayed in candidate's profile/portal
+**Working Days Auto-Calculation:**
+
+```
+Example (1 week):
+  Mon: Attended ✅
+  Tue: Attended ✅
+  Wed: Absent ❌
+  Thu: Attended ✅
+  Fri: Attended ✅
+  Sat: Attended ✅
+  ───────────────────
+  Total Working Days: 5 out of 6
+```
+
+- Candidate marks each day as **attended** or **absent**
+- System automatically calculates: `Working Days = Total Days − Absent Days`
+- The working days count appears on the **candidate's profile page** for HR to view
+- This data is also synced to **Google Sheet** for record-keeping
+- HR can see the running total at a glance on the candidate profile
 
 ---
 
@@ -476,17 +502,18 @@ HR Drive/
 └──┬───┘ └────────┘     └──────────┘
    │
    ▼
-┌──────────────────────────────┐
-│  💼 F3.5 — Agreement Flow    │
-│                               │
-│  1. HR sends agreement PDF   │
-│     via email (with blanks)  │
-│  2. Candidate prints & signs │
-│  3. Candidate scans & sends  │
-│     back via email           │
-│  4. HR uploads to platform   │
-│     → Status: Received ✅    │
-└──────────────┬───────────────┘
+┌──────────────────────────────────┐
+│  💼 F3.5 — Agreement Flow        │
+│                                   │
+│  1. HR sends agreement PDF       │
+│     via email (with blanks)      │
+│  2. Candidate prints & signs     │
+│  3. Candidate scans & sends      │
+│     back via email               │
+│  4. System auto-detects email    │
+│     reply & auto-uploads         │
+│     → Status: Received ✅        │
+└──────────────┬───────────────────┘
                │
                ▼
 ┌──────────────┐
@@ -501,12 +528,15 @@ HR Drive/
 └──────┬───────┘
        │
        ▼
-┌──────────────┐
-│ Internship   │
-│ Active       │
-├──────────────┤
-│ Task Tracker │
-└──────┬───────┘
+┌──────────────────────────────────┐
+│ Internship Active                │
+│                                  │
+│  👤 Candidate: Writes daily      │
+│       tasks & marks attendance   │
+│  👁️ HR: Reviews & views only     │
+│  🤖 System: Auto-calculates      │
+│       working days & syncs sheet │
+└──────┬───────────────────────────┘
        │
    ┌───┴────┐
    │        │
@@ -568,7 +598,7 @@ Events that trigger email:
 | 8 | **Candidates List** | `/candidates` | HR | All appointed/interning candidates |
 | 9 | **Candidate Profile** | `/candidate/:id` | HR | Full candidate details & actions |
 | 10 | **Manual Entry** | `/add-application` | HR | Manually add an application |
-| 11 | **Task Tracker** | `/candidate/:id/tasks` | HR + Candidate | View task tracker (candidate: read-only) |
+| 11 | **Task Tracker** | `/candidate/:id/tasks` | HR + Candidate | **Candidate writes** daily tasks & attendance. **HR views** only. Working days displayed on profile |
 | 12 | **Settings** | `/settings` | HR | Google Sheet config, Drive config, Canva template upload |
 | 13 | **Certificates** | `/candidate/:id/certificates` | HR | Generate Experience Cert & LOR |
 
@@ -748,6 +778,19 @@ src/app/
 | `remarks` | TEXT | Optional notes |
 | `working_days_count` | INTEGER | Running count of working days |
 | `created_at` | TIMESTAMP | Auto |
+
+#### `attendance` — Daily Attendance (new, for working days calc)
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID (PK) | Primary key |
+| `application_id` | UUID (FK) | References `applications.id` |
+| `date` | DATE | The day |
+| `present` | BOOLEAN | Whether candidate attended (`true`) or was absent (`false`) |
+| `task_description` | TEXT | What the candidate completed that day |
+| `remarks` | TEXT | Optional notes by candidate |
+| `created_at` | TIMESTAMP | Auto |
+| `updated_at` | TIMESTAMP | Auto — candidate can edit |
 
 #### `settings` — Platform Configuration
 
@@ -1055,13 +1098,16 @@ Excel Generation
 | 2 | **Google Sheet is the source of truth** — Two-way sync means your DB and sheet must stay in sync |
 | 3 | **Folders are auto-created** — Drive structure follows a strict naming convention |
 | 4 | **Email is automation-friendly** — Every major action triggers an email |
-| 5 | **Candidate never logs in** — They receive everything via email, except the task tracker |
+| 5 | **Candidate logs in to write tasks** — They can write & edit their daily task tracker and mark attendance |
 | 6 | **Two-phase interview decision** — First: Accept/Reject/Hold on application. Then: Appointed/Not/Hold after interview |
-| 7 | **Agreement must be received before joining letter** — The candidate must print, sign, and return the agreement before proceeding to onboarding |
-| 8 | **Letters are reviewed before sending** — HR approves every generated letter |
-| 9 | **Delete is soft** — Removing from platform ≠ removing from sheet |
-| 10 | **Build in phases** — Start with P0 features and gradually add complexity |
-| 11 | **This is a full-stack project** — You'll touch frontend, backend, databases, APIs, cloud storage, and email |
+| 7 | **Agreement auto-uploads** — System detects the candidate's email reply and auto-uploads the signed PDF. No manual HR upload needed |
+| 8 | **Candidate writes, HR reviews** — The intern writes their daily tasks & attendance. HR only views the data. System auto-calculates working days |
+| 9 | **Working days auto-calculated** — Based on attendance entries, system shows `Total Days − Absent Days` on candidate profile |
+| 10 | **Task tracker synced to Google Sheet** — Same two-way sync as applications |
+| 11 | **Letters are reviewed before sending** — HR approves every generated letter |
+| 12 | **Delete is soft** — Removing from platform ≠ removing from sheet |
+| 13 | **Build in phases** — Start with P0 features and gradually add complexity |
+| 14 | **This is a full-stack project** — You'll touch frontend, backend, databases, APIs, cloud storage, and email |
 
 ---
 
